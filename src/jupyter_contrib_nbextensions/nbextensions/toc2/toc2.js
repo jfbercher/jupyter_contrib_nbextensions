@@ -1,8 +1,17 @@
-//---------------------------------------------------------------------
+(require.specified('base/js/namespace') ? define : function (deps, callback) {
+    // if here, the Jupyter namespace hasn't been specified to be loaded.
+    // This means that we're probably embedded in a page, so we need to make
+    // our definition with a specific module name
+    return define('nbextensions/toc2/toc2', deps, callback);
+})(['jquery', 'require'], function ($, require) {
+    "use strict";
 
-//......... utilitary functions............
-
-var liveNotebook = !(typeof IPython == "undefined")
+    var IPython;
+    var liveNotebook = false;
+    require(['base/js/namespace'], function (Jupyter_mod) {
+        liveNotebook = true;
+        IPython = Jupyter_mod;
+    });
 
 function incr_lbl(ary, h_idx) { //increment heading label  w/ h_idx (zero based)
     ary[h_idx]++;
@@ -660,3 +669,10 @@ var table_of_contents = function (cfg,st) {
     });
   
   };
+
+    return {
+        highlight_toc_item: highlight_toc_item,
+        table_of_contents: table_of_contents,
+        toggle_toc: toggle_toc,
+    };
+});
