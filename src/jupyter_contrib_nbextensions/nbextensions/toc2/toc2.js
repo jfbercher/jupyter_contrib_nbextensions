@@ -1,8 +1,19 @@
-//---------------------------------------------------------------------
+(require.specified('base/js/namespace') ? define : function (deps, callback) {
+    // if here, the Jupyter namespace hasn't been specified to be loaded.
+    // This means that we're probably embedded in a page, so we need to make
+    // our definition with a specific module name
+    return define('nbextensions/toc2/toc2', deps, callback);
+})(['jquery', 'require'], function ($, require) {
+    "use strict";
 
-//......... utilitary functions............
-
-var liveNotebook = !(typeof IPython == "undefined")
+    var IPython;
+    var liveNotebook = false;
+    if (require.specified('base/js/namespace')) {
+        require(['base/js/namespace'], function(Jupyter_mod) {
+            liveNotebook = true;
+            IPython = Jupyter_mod;
+        });
+    }
 
 function incr_lbl(ary, h_idx) { //increment heading label  w/ h_idx (zero based)
     ary[h_idx]++;
@@ -23,8 +34,7 @@ function removeMathJaxPreview(elt) {
 
 var make_link = function(h, num_lbl) {
     var a = $("<a/>");
-    a.attr("href", window.location.origin + window.location.pathname + '#' + h.attr('id'));
-    // a.attr("href", h.find('.anchor-link').attr('href'));
+    a.attr("href", '#' + h.attr('id'));
     // get the text *excluding* the link text, whatever it may be
     var hclone = h.clone();
     hclone = removeMathJaxPreview(hclone);
@@ -535,25 +545,21 @@ var table_of_contents = function (cfg,st) {
     var depth = 1; //var depth = ol_depth(ol);
     var li= ul;//yes, initialize li with ul! 
     var all_headers= $("#notebook").find(":header");
-    var min_lvl = 1 + Number(Boolean(cfg.skip_h1_title)), lbl_ary = [];
+    var min_lvl=1, lbl_ary= [];
     for(; min_lvl <= 6; min_lvl++){ if(all_headers.is('h'+min_lvl)){break;} }
     for(var i= min_lvl; i <= 6; i++){ lbl_ary[i - min_lvl]= 0; }
 
     //loop over all headers
     all_headers.each(function (i, h) {
       var level = parseInt(h.tagName.slice(1), 10) - min_lvl + 1;
-      // skip below threshold, or h1 ruled out by cfg.skip_h1_title
-      if (level < 1 || level > cfg.threshold){ return; }
+      // skip below threshold
+      if (level > cfg.threshold){ return; }
       // skip headings with no ID to link to
       if (!h.id){ return; }
       // skip toc cell if present
       if (h.id=="Table-of-Contents"){ return; }
       //If h had already a number, remove it
       $(h).find(".toc-item-num").remove();
-      // skip header if an html tag with class 'tocSkip' is present
-      // eg in ## title <a class='tocSkip'>
-      if ($(h).find('.tocSkip').length != 0 ) {
-          return; }
       var num_str= incr_lbl(lbl_ary,level-1).join('.');// numbered heading labels
       var num_lbl= $("<span/>").addClass("toc-item-num")
             .text(num_str).append('&nbsp;').append('&nbsp;');
@@ -665,3 +671,10 @@ var table_of_contents = function (cfg,st) {
     });
   
   };
+
+    return {
+        highlight_toc_item: highlight_toc_item,
+        table_of_contents: table_of_contents,
+        toggle_toc: toggle_toc,
+    };
+});
