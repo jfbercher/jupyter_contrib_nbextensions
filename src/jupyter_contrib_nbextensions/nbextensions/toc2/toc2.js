@@ -8,10 +8,12 @@
 
     var IPython;
     var liveNotebook = false;
-    require(['base/js/namespace'], function (Jupyter_mod) {
-        liveNotebook = true;
-        IPython = Jupyter_mod;
-    });
+    if (require.specified('base/js/namespace')) {
+        require(['base/js/namespace'], function(Jupyter_mod) {
+            liveNotebook = true;
+            IPython = Jupyter_mod;
+        });
+    }
 
 function incr_lbl(ary, h_idx) { //increment heading label  w/ h_idx (zero based)
     ary[h_idx]++;
